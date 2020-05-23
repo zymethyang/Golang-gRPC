@@ -3,6 +3,7 @@ package main
 import (
 	"context"
 	"fmt"
+	"io"
 	"log"
 
 	"../calculatorpb"
@@ -17,12 +18,12 @@ func main() {
 	}
 
 	defer cc.Close()
-	c := calculatorpb.NewSumServiceClient(cc)
+	c := calculatorpb.NewCalculateServiceClient(cc)
 
-	doUnary(c)
+	doServerStreaming(c)
 }
 
-func doUnary(c calculatorpb.SumServiceClient) {
+func doUnary(c calculatorpb.CalculateServiceClient) {
 	fmt.Println("Starting an unary request")
 
 	req := &calculatorpb.SumRequest{
@@ -39,4 +40,31 @@ func doUnary(c calculatorpb.SumServiceClient) {
 	}
 
 	log.Printf("Response from Sum: %v", res.Result)
+}
+
+func doServerStreaming(c calculatorpb.CalculateServiceClient) {
+	fmt.Println("Starting an streaming request")
+
+	req := &calculatorpb.PrimeNumberDecRequest{
+		PrimeNumberDec: &calculatorpb.PrimeNumberDec{
+			Number: 120,
+		},
+	}
+
+	resStream, err := c.PrimeNumberDec(context.Background(), req)
+
+	if err != nil {
+		log.Fatalf("error while calling PrimeNumberDec RPC: %v", err)
+	}
+
+	for {
+		msg, err := resStream.Recv()
+		if err == io.EOF {
+			break
+		}
+		if err != nil {
+			log.Fatalf("error while read stream: %v", err)
+		}
+		log.Printf("Response from PrimeNumberDec: %v", msg.GetResult())
+	}
 }

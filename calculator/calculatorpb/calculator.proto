@@ -16,7 +16,20 @@ message SumResponse{
     int32 result = 1;
 }
 
-service SumService{
+message PrimeNumberDec{ 
+    int32 number = 1;
+}
+
+message PrimeNumberDecRequest{
+    PrimeNumberDec primeNumberDec = 1;
+}
+
+message PrimeNumberDecResponse{
+    int32 result = 1;
+}
+
+service CalculateService{
     // Unary
     rpc Sum (SumRequest) returns (SumResponse){};
+    rpc PrimeNumberDec (PrimeNumberDecRequest) returns (stream PrimeNumberDecResponse){};
 }
