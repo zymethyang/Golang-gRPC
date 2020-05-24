@@ -21,7 +21,7 @@ func main() {
 	defer cc.Close()
 	c := calculatorpb.NewCalculateServiceClient(cc)
 
-	doClientStreaming(c)
+	doBiDiStreaming(c)
 }
 
 func doUnary(c calculatorpb.CalculateServiceClient) {
@@ -112,4 +112,78 @@ func doClientStreaming(c calculatorpb.CalculateServiceClient) {
 		log.Fatalf("error while receiving response from ComputeAverage: %v \n", err)
 	}
 	fmt.Printf("ComputeAverage Response: %v \n", res)
+}
+
+func doBiDiStreaming(c calculatorpb.CalculateServiceClient) {
+	fmt.Printf("Starting to do a Streaming RPC... \n")
+
+	// We create a stream by involking the client
+	stream, err := c.FindMaximum(context.Background())
+	if err != nil {
+		log.Fatalf("Error while creating stream: ̀%v \n", err)
+		return
+	}
+
+	requests := []*calculatorpb.FindMaximumRequest{
+		&calculatorpb.FindMaximumRequest{
+			FindMaximum: &calculatorpb.FindMaximum{
+				Number: 1,
+			},
+		},
+		&calculatorpb.FindMaximumRequest{
+			FindMaximum: &calculatorpb.FindMaximum{
+				Number: 5,
+			},
+		},
+		&calculatorpb.FindMaximumRequest{
+			FindMaximum: &calculatorpb.FindMaximum{
+				Number: 3,
+			},
+		},
+		&calculatorpb.FindMaximumRequest{
+			FindMaximum: &calculatorpb.FindMaximum{
+				Number: 6,
+			},
+		},
+		&calculatorpb.FindMaximumRequest{
+			FindMaximum: &calculatorpb.FindMaximum{
+				Number: 2,
+			},
+		},
+		&calculatorpb.FindMaximumRequest{
+			FindMaximum: &calculatorpb.FindMaximum{
+				Number: 20,
+			},
+		},
+	}
+
+	waitc := make(chan struct{})
+
+	// We receive a bunch of message from the client (go routine)
+	go func() {
+		for _, req := range requests {
+			fmt.Printf("Sending message: %v \n", req)
+			stream.Send(req)
+			time.Sleep(1000 * time.Millisecond)
+		}
+		stream.CloseSend()
+	}()
+
+	go func() {
+		for {
+			res, err := stream.Recv()
+			if err == io.EOF {
+				close(waitc)
+				break
+			}
+			if err != nil {
+				log.Fatalf("Error while receiving: %v", err)
+				close(waitc)
+			}
+			fmt.Printf("Received: %v \n", res.GetResult())
+		}
+	}()
+
+	// Block until everything is done
+	<-waitc
 }
