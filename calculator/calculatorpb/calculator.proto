@@ -52,9 +52,18 @@ message FindMaximumResponse{
     int32 result = 1;
 }
 
+message SquareRootRequest {
+    int32 number = 1;
+}
+
+message SquareRootResponse {
+    double number_root = 1;
+}
+
 service CalculateService{
     rpc Sum (SumRequest) returns (SumResponse){};
     rpc PrimeNumberDec (PrimeNumberDecRequest) returns (stream PrimeNumberDecResponse){};
     rpc ComputeAverage (stream ComputeAverageRequest) returns (ComputeAverageResponse){};
-    rpc FindMaximum (stream FindMaximumRequest) returns (stream FindMaximumResponse);
+    rpc FindMaximum (stream FindMaximumRequest) returns (stream FindMaximumResponse){};
+    rpc SquareRoot(SquareRootRequest) returns (SquareRootResponse) {};
 }
