@@ -28,8 +28,21 @@ message PrimeNumberDecResponse{
     int32 result = 1;
 }
 
+message ComputeAverage{
+    float number = 1;
+}
+
+message ComputeAverageRequest{
+    ComputeAverage computeAverage = 1;
+}
+
+message ComputeAverageResponse{
+    float result = 1;
+}
+
 service CalculateService{
     // Unary
     rpc Sum (SumRequest) returns (SumResponse){};
     rpc PrimeNumberDec (PrimeNumberDecRequest) returns (stream PrimeNumberDecResponse){};
+    rpc ComputeAverage (stream ComputeAverageRequest) returns (ComputeAverageResponse);
 }
